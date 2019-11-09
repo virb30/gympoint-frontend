@@ -4,6 +4,7 @@ import AuthTypes from './types';
 const INITIAL_STATE = {
   loading: false,
   token: null,
+  user: null,
   signed: false,
 };
 
@@ -16,6 +17,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       }
       case AuthTypes.SIGN_IN_SUCCESS: {
         draft.token = action.payload.token;
+        draft.user = action.payload.user;
         draft.signed = true;
         draft.loading = false;
         break;
@@ -26,6 +28,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       }
       case AuthTypes.SIGN_OUT: {
         draft.token = null;
+        draft.user = null;
         draft.signed = false;
         break;
       }

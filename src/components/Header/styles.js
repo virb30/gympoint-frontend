@@ -65,18 +65,21 @@ export const Content = styled.div`
     div {
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
 
       strong {
+        color: #666;
         font-weight: bold;
         font-size: 14px;
+        align-self: flex-start;
       }
 
       button {
+        margin-top: 5px;
         background: none;
         color: ${colors.danger};
         border: none;
         font-size: 14px;
+        align-self: flex-end;
       }
     }
   }
