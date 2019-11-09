@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { darken } from 'polished';
+import { darken, lighten } from 'polished';
 
 export const Container = styled.div`
   background: #fff;
@@ -40,6 +40,11 @@ export const Container = styled.div`
         border-radius: 4px;
         border: 1px solid #ddd;
         padding: 13px;
+      }
+
+      span {
+        font-weight: 500;
+        color: ${lighten(0.06, '#ee4d64')};
       }
     }
 
