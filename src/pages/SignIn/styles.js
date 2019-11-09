@@ -1,6 +1,8 @@
 import styled from 'styled-components';
 import { darken, lighten } from 'polished';
 
+import colors from '~/styles/colors';
+
 export const Container = styled.div`
   background: #fff;
   border-radius: 4px;
@@ -44,12 +46,12 @@ export const Container = styled.div`
 
       span {
         font-weight: 500;
-        color: ${lighten(0.06, '#ee4d64')};
+        color: ${lighten(0.06, colors.primary)};
       }
     }
 
     button {
-      background: #ee4d64;
+      background: ${colors.primary};
       border-radius: 4px;
       height: 45px;
       width: 100%;
@@ -61,7 +63,7 @@ export const Container = styled.div`
       transition: background 0.2s;
 
       &:hover {
-        background: ${darken(0.05, '#ee4d64')};
+        background: ${darken(0.05, colors.primary)};
       }
     }
   }

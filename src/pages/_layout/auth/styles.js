@@ -1,7 +1,9 @@
 import styled from 'styled-components';
 
+import colors from '~/styles/colors';
+
 export const Wrapper = styled.div`
-  background: #ee4d64;
+  background: ${colors.primary};
   height: 100%;
   display: flex;
   flex-direction: column;
