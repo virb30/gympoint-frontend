@@ -1,4 +1,5 @@
 export default {
   primary: '#ee4d64',
-  danger: '#D33B3B',
+  danger: '#DE3B3B',
+  info: '#4D85EE',
 };
