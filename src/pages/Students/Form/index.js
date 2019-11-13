@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams, useHistory } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useParams } from 'react-router-dom';
 import { MdCheck, MdChevronLeft } from 'react-icons/md';
 import { Form, Input } from '@rocketseat/unform';
 import * as Yup from 'yup';
+
+import api from '~/services/api';
+
+import * as StudentActions from '~/store/modules/student/actions';
 
 import Content from '~/components/DefaultForm';
 import { Container } from './styles';
@@ -22,31 +27,59 @@ const schema = Yup.object().shape({
     .email('E-mail inválido')
     .required('O e-mail é obrigatório'),
   age: Yup.number()
+    .typeError('A idade deve ser um número')
     .integer('A idade deve ser um número inteiro')
     .positive('A idade deve ser um número positivo')
     .required('A idade é obrigatória'),
-  weight: Yup.number().required('O peso é obrigatório'),
+  weight: Yup.number()
+    .typeError('O Peso deve ser um número')
+    .required('O peso é obrigatório'),
   height: Yup.number()
+    .typeError('A altura deve ser um número')
     .integer('A altura deve ser um número inteiro')
     .required('A altura é obrigatória'),
 });
 
 export default function StudentsForm() {
   const [student, setStudent] = useState(INITIAL_STUDENT);
-  const { state } = useHistory();
+  const { loading } = useSelector(state => state.student);
+  const dispatch = useDispatch();
   const { id } = useParams();
 
   useEffect(() => {
-    if (state) {
-      setStudent(state);
+    async function loadStudent() {
+      if (id !== 'new') {
+        const response = await api.get(`/students/${id}`);
+        setStudent({ ...response.data });
+      }
     }
-  }, [state]);
+
+    loadStudent();
+  }, [id]);
 
   function handleChange(e) {
     setStudent({ ...student, [e.target.name]: e.target.value });
   }
 
-  console.tron.log(student);
+  function handleSubmit(data) {
+    const { name, email, age, weight, height } = data;
+    if (id === 'new') {
+      dispatch(
+        StudentActions.insertStudentRequest(name, email, age, weight, height)
+      );
+    } else {
+      dispatch(
+        StudentActions.updateStudentRequest(
+          id,
+          name,
+          email,
+          age,
+          weight,
+          height
+        )
+      );
+    }
+  }
 
   return (
     <Container>
@@ -58,13 +91,13 @@ export default function StudentsForm() {
               <MdChevronLeft color="#fff" size={20} />
               VOLTAR
             </Link>
-            <button type="button">
+            <button type="submit" form="student" disabled={!!loading}>
               <MdCheck color="#fff" size={20} /> SALVAR
             </button>
           </div>
         </header>
 
-        <Form schema={schema} onSubmit>
+        <Form schema={schema} id="student" onSubmit={handleSubmit}>
           <div>
             <label>
               NOME COMPLETO
@@ -103,16 +136,17 @@ export default function StudentsForm() {
               PESO (em kg)
               <Input
                 name="weight"
-                type="text"
+                type="number"
                 value={student.weight || ''}
                 onChange={handleChange}
+                step={0.1}
               />
             </label>
             <label>
               Altura (em cm)
               <Input
                 name="height"
-                type="text"
+                type="number"
                 value={student.height || ''}
                 onChange={handleChange}
               />

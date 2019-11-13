@@ -30,6 +30,29 @@ export default function reducer(state = INITIAL_STATE, action) {
         draft.students = students.filter(student => student.id !== id);
         break;
       }
+      case StudentTypes.INSERT_REQUEST: {
+        draft.loading = true;
+        break;
+      }
+      case StudentTypes.UPDATE_REQUEST: {
+        draft.loading = true;
+        break;
+      }
+      case StudentTypes.INSERT_SUCCESS: {
+        const newStudent = action.payload;
+        draft.students = [...state.students, newStudent];
+        break;
+      }
+      case StudentTypes.UPDATE_SUCCESS: {
+        const { id, ...rest } = action.payload;
+        draft.students = state.students.map(student => {
+          if (student.id === id) {
+            return { ...rest };
+          }
+          return student;
+        });
+        break;
+      }
       default:
     }
   });

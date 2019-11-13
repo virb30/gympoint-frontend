@@ -39,3 +39,49 @@ export function deleteStudentFailure() {
     type: StudentTypes.DELETE_FAILURE,
   };
 }
+
+export function insertStudentRequest(name, email, age, weight, height) {
+  return {
+    type: StudentTypes.INSERT_REQUEST,
+    payload: {
+      name,
+      email,
+      age,
+      weight,
+      height,
+    },
+  };
+}
+
+export function insertStudentSuccess({ id, name, email, age, weight, height }) {
+  return {
+    type: StudentTypes.INSERT_SUCCESS,
+    payload: { id, name, email, age, weight, height },
+  };
+}
+
+export function insertStudentFailure() {
+  return {
+    type: StudentTypes.INSERT_FAILURE,
+  };
+}
+
+export function updateStudentRequest(id, name, email, age, weight, height) {
+  return {
+    type: StudentTypes.UPDATE_REQUEST,
+    payload: { id, name, email, age, weight, height },
+  };
+}
+
+export function updateStudentSuccess({ id, name, email, age, weight, height }) {
+  return {
+    type: StudentTypes.UPDATE_SUCCESS,
+    payload: { id, name, email, age, weight, height },
+  };
+}
+
+export function updateStudentFailure() {
+  return {
+    type: StudentTypes.UPDATE_FAILURE,
+  };
+}

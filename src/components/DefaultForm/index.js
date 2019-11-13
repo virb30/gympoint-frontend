@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { darken } from 'polished';
+import { darken, lighten } from 'polished';
 
 import colors from '~/styles/colors';
 
@@ -104,6 +104,11 @@ const Content = styled.div`
           margin-top: 8px;
           font-size: 16px;
           padding: 10px;
+        }
+
+        span {
+          margin-top: 5px;
+          color: ${lighten(0.15, colors.danger)};
         }
       }
     }
