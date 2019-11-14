@@ -5,6 +5,7 @@ import { MdCheck, MdChevronLeft } from 'react-icons/md';
 import { Form, Input } from '@rocketseat/unform';
 import * as Yup from 'yup';
 
+import api from '~/services/api';
 import { formatPrice } from '~/util/format';
 
 import * as PlanActions from '~/store/modules/plan/actions';
@@ -34,7 +35,7 @@ const schema = Yup.object().shape({
 
 export default function PlanForm() {
   const [plan, setPlan] = useState(INITIAL_PLAN);
-  const { loading, plans } = useSelector(state => state.plan);
+  const { loading } = useSelector(state => state.student);
   const dispatch = useDispatch();
   const { id } = useParams();
 
@@ -47,11 +48,15 @@ export default function PlanForm() {
   }, [plan]);
 
   useEffect(() => {
-    if (id !== 'new') {
-      const selectedPlan = plans.find(p => p.id === Number(id));
-      setPlan({ ...selectedPlan });
+    async function loadStudent() {
+      if (id !== 'new') {
+        const response = await api.get(`/plans/${id}`);
+        setPlan({ ...response.data });
+      }
     }
-  }, [id, plans]);
+
+    loadStudent();
+  }, [id]);
 
   function handleChange(e) {
     const { name, value } = e.target;

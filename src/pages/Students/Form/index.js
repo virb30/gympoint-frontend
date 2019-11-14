@@ -5,8 +5,6 @@ import { MdCheck, MdChevronLeft } from 'react-icons/md';
 import { Form, Input } from '@rocketseat/unform';
 import * as Yup from 'yup';
 
-import api from '~/services/api';
-
 import * as StudentActions from '~/store/modules/student/actions';
 
 import Content from '~/components/DefaultForm';
@@ -42,23 +40,20 @@ const schema = Yup.object().shape({
 
 export default function StudentsForm() {
   const [student, setStudent] = useState(INITIAL_STUDENT);
-  const { loading } = useSelector(state => state.student);
+  const { loading, students } = useSelector(state => state.student);
   const dispatch = useDispatch();
   const { id } = useParams();
 
   useEffect(() => {
-    async function loadStudent() {
-      if (id !== 'new') {
-        const response = await api.get(`/students/${id}`);
-        setStudent({ ...response.data });
-      }
+    if (id !== 'new') {
+      const selectedStudent = students.find(s => s.id === Number(id));
+      setStudent({ ...selectedStudent });
     }
-
-    loadStudent();
-  }, [id]);
+  }, [id, students]);
 
   function handleChange(e) {
-    setStudent({ ...student, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setStudent({ ...student, [name]: value });
   }
 
   function handleSubmit(data) {
