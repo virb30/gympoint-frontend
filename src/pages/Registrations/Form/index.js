@@ -12,6 +12,7 @@ import * as PlanActions from '~/store/modules/plan/actions';
 
 import Content from '~/components/DefaultForm';
 import { Container } from './styles';
+import SelectInput from '~/components/SelectInput';
 
 const INITIAL_PLAN = {
   title: '',
@@ -35,9 +36,17 @@ const schema = Yup.object().shape({
 
 export default function PlanForm() {
   const [plan, setPlan] = useState(INITIAL_PLAN);
-  const { loading } = useSelector(state => state.student);
   const dispatch = useDispatch();
   const { id } = useParams();
+  const { loading } = useSelector(state => state.registration);
+  const students = useSelector(state =>
+    state.student.students.map(s => {
+      return {
+        value: s.id,
+        label: s.name,
+      };
+    })
+  );
 
   const totalPrice = useMemo(() => {
     if (plan.price && plan.duration) {
@@ -72,37 +81,42 @@ export default function PlanForm() {
     }
   }
 
+  function handleSelectChange(e) {
+    console.tron.log(e);
+  }
+
   return (
     <Container>
       <Content>
         <header>
-          <h1>{id === 'new' ? 'Cadastro de plano' : 'Edição de plano'}</h1>
+          <h1>
+            {id === 'new' ? 'Cadastro de matrícula' : 'Edição de matrícula'}
+          </h1>
           <div>
-            <Link to="/plans">
+            <Link to="/registrations">
               <MdChevronLeft color="#fff" size={20} />
               VOLTAR
             </Link>
-            <button type="submit" form="plan" disabled={!!loading}>
+            <button type="submit" form="registration" disabled={!!loading}>
               <MdCheck color="#fff" size={20} /> SALVAR
             </button>
           </div>
         </header>
 
-        <Form schema={schema} id="plan" onSubmit={handleSubmit}>
+        <Form schema={schema} id="registration" onSubmit={handleSubmit}>
           <div>
             <label>
-              TÍTULO DO PLANO
-              <Input
-                name="title"
-                type="text"
-                value={plan.title || ''}
-                onChange={handleChange}
+              ALUNO
+              <SelectInput
+                name="student"
+                options={students}
+                onChange={handleSelectChange}
               />
             </label>
           </div>
           <div>
             <label>
-              DURAÇÃO (em meses)
+              PLANO
               <Input
                 name="duration"
                 type="number"
@@ -111,7 +125,7 @@ export default function PlanForm() {
               />
             </label>
             <label>
-              PREÇO MENSAL
+              DATA DE INÍCIO
               <Input
                 name="price"
                 type="number"
@@ -121,7 +135,16 @@ export default function PlanForm() {
               />
             </label>
             <label>
-              PREÇO TOTAL
+              DATA DE TÉRMINO
+              <Input
+                name="totalPrice"
+                type="text"
+                value={totalPrice || ''}
+                disabled
+              />
+            </label>
+            <label>
+              VALOR FINAL
               <Input
                 name="totalPrice"
                 type="text"

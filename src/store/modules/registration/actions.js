@@ -17,8 +17,21 @@ export function getRegistrationsFailure() {
   };
 }
 
-export function deleteRegistrationRequest() {
+export function deleteRegistrationRequest(id) {
   return {
     type: RegistrationTypes.DELETE_REQUEST,
+    payload: { id },
+  };
+}
+
+export function deleteRegistrationSuccess(id) {
+  return {
+    type: RegistrationTypes.DELETE_SUCCESS,
+    payload: { id },
+  };
+}
+export function deleteRegistrationFailure() {
+  return {
+    type: RegistrationTypes.DELETE_FAILURE,
   };
 }

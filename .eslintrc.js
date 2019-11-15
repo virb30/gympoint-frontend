@@ -36,7 +36,7 @@ module.exports = {
     'jsx-a11y/label-has-associated-control': [
       2,
       {
-        controlComponents: ['Input'],
+        controlComponents: ['Input', 'SelectInput'],
       },
     ],
   },

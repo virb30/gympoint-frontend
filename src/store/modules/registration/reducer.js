@@ -24,6 +24,16 @@ export default function reducer(state = INITIAL_STATE, action) {
         draft.registrations = [];
         break;
       }
+      case RegistrationTypes.DELETE_REQUEST: {
+        draft.loading = true;
+        break;
+      }
+      case RegistrationTypes.DELETE_SUCCESS: {
+        const { id } = action.payload;
+        draft.loading = false;
+        draft.registrations = state.registrations.filter(r => r.id !== id);
+        break;
+      }
       default:
     }
   });
