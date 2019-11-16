@@ -69,6 +69,11 @@ const Content = styled.div`
           background: ${darken(0.05, colors.primary)};
         }
 
+        &:disabled {
+          background: ${lighten(0.25, colors.primary)};
+          cursor: not-allowed;
+        }
+
         svg {
           margin-right: 10px;
         }

@@ -23,8 +23,10 @@ export default function Plans({ history }) {
       setPlans(response.data);
     }
 
-    loadPlans();
-  }, []);
+    if (!showForm) {
+      loadPlans();
+    }
+  }, [showForm]);
 
   useEffect(() => {
     const { state } = history.location;

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { MdCheckCircle } from 'react-icons/md';
@@ -23,9 +23,10 @@ export default function Registrations({ history }) {
       const response = await api.get('/registrations');
       setRegistrations(response.data);
     }
-
-    loadRegistrations();
-  }, []);
+    if (!showForm) {
+      loadRegistrations();
+    }
+  }, [showForm]);
 
   useEffect(() => {
     const { state } = history.location;
@@ -44,6 +45,22 @@ export default function Registrations({ history }) {
     }
   }, [history.location, registrations]);
 
+  const formattedSelected = useMemo(() => {
+    if (selected) {
+      return {
+        ...selected,
+        start_date: parseISO(selected.start_date),
+        student_id: {
+          value: selected.student.id,
+          label: selected.student.name,
+        },
+        plan_id: selected.plan.id,
+      };
+    }
+
+    return {};
+  }, [selected]);
+
   const handleDelete = useCallback(
     async id => {
       if (
@@ -52,7 +69,7 @@ export default function Registrations({ history }) {
         )
       ) {
         try {
-          await api.delete(`/registration/${id}`);
+          await api.delete(`/registrations/${id}`);
           setRegistrations(registrations.filter(r => r.id !== Number(id)));
         } catch (err) {
           toast.error('Não foi possível excluir a Matrícula. Tente novamente');
@@ -104,7 +121,7 @@ export default function Registrations({ history }) {
         {!showForm ? (
           <List registrations={renderRegistrations()} />
         ) : (
-          <Form initialData={selected} />
+          <Form initialData={formattedSelected} />
         )}
       </Content>
     </Container>

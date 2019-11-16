@@ -1,43 +1,37 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MdCheck, MdChevronLeft } from 'react-icons/md';
 import { Form, Input, Select } from '@rocketseat/unform';
+import { addMonths } from 'date-fns';
+import pt from 'date-fns/locale/pt';
+import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 
 import api from '~/services/api';
+import history from '~/services/history';
 import { formatPrice } from '~/util/format';
-
-import * as PlanActions from '~/store/modules/plan/actions';
 
 import Content from '~/components/DefaultForm';
 import SelectInput from '~/components/SelectInput';
-
-const INITIAL_PLAN = {
-  title: '',
-  id: '',
-  duration: '',
-  price: '',
-  totalPrice: 0.0,
-};
+import DateInput from '~/components/DateInput';
 
 const schema = Yup.object().shape({
-  title: Yup.string().required('O título é obrigatório'),
-  duration: Yup.number()
-    .typeError('A duração deve ser um número')
-    .integer('A duração deve ser um número inteiro')
-    .positive('A duração deve ser um número positivo')
-    .required('A duração é obrigatória'),
-  price: Yup.number()
-    .typeError('O Preço deve ser um número')
-    .required('O preço é obrigatório'),
+  student_id: Yup.number()
+    .typeError('Selecione um aluno')
+    .required('Selecione o aluno'),
+  plan_id: Yup.number()
+    .typeError('Selecione um plano')
+    .required('Selecione o plano'),
+  start_date: Yup.date()
+    .typeError('Informe a data de início')
+    .required('Informe a data de início'),
 });
 
 export default function RegistrationForm({ initialData }) {
-  const [search, setSearch] = useState('');
-  const [registrationValues, setRegistrationValues] = useState(INITIAL_PLAN);
   const [plans, setPlans] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [startDate, setStartDate] = useState(initialData.start_date || null);
   const [loading, setLoading] = useState(false);
 
   async function loadOptions(inputValue) {
@@ -58,12 +52,52 @@ export default function RegistrationForm({ initialData }) {
     loadPlans();
   }, []);
 
-  function handleSubmit(data) {
-    console.tron.log(data);
-  }
+  useEffect(() => {
+    if (initialData.plan_id) {
+      setSelectedPlan(plans.find(p => p.id === Number(initialData.plan_id)));
+    }
 
-  function handleSelectChange(e) {
-    console.tron.log(e);
+    setSelectedPlan(null);
+  }, [initialData.plan_id, plans]);
+
+  const endDate = useMemo(() => {
+    if (startDate && selectedPlan) {
+      return addMonths(startDate, selectedPlan.duration);
+    }
+
+    return '';
+  }, [selectedPlan, startDate]);
+
+  const finalPrice = useMemo(() => {
+    if (selectedPlan) {
+      return formatPrice(selectedPlan.duration * selectedPlan.price);
+    }
+
+    return '';
+  }, [selectedPlan]);
+
+  async function handleSubmit({ student_id, plan_id, start_date }) {
+    setLoading(true);
+    try {
+      if (!initialData) {
+        await api.post('/registrations', {
+          student_id,
+          plan_id,
+          start_date,
+        });
+      } else {
+        const { id } = initialData;
+        await api.put(`/registrations/${id}`, {
+          student_id,
+          plan_id,
+          start_date,
+        });
+      }
+      history.push('/registrations');
+    } catch (err) {
+      toast.error('Não foi possível matricular o aluno. Tente novamente');
+    }
+    setLoading(false);
   }
 
   return (
@@ -77,18 +111,23 @@ export default function RegistrationForm({ initialData }) {
             <MdChevronLeft color="#fff" size={20} />
             VOLTAR
           </Link>
-          <button type="submit" form="registration" disabled={!!loading}>
+          <button type="submit" form="registration" disabled={loading}>
             <MdCheck color="#fff" size={20} /> SALVAR
           </button>
         </div>
       </header>
 
-      <Form id="registration" initialData={initialData} onSubmit={handleSubmit}>
+      <Form
+        id="registration"
+        initialData={initialData}
+        schema={schema}
+        onSubmit={handleSubmit}
+      >
         <div>
           <label>
             ALUNO
             <SelectInput
-              name="student"
+              name="student_id"
               loadOptions={loadOptions}
               defaultOptions
             />
@@ -97,19 +136,41 @@ export default function RegistrationForm({ initialData }) {
         <div>
           <label htmlFor="plan">
             PLANO
-            <Select options={plans} name="plan" />
+            <Select
+              options={plans}
+              name="plan_id"
+              onChange={e =>
+                setSelectedPlan(
+                  plans.find(p => p.id === Number(e.target.value))
+                )
+              }
+            />
           </label>
-          <label>
+          <label htmlFor="start_date">
             DATA DE INÍCIO
-            <Input name="price" type="number" step={0.01} />
+            <DateInput
+              name="start_date"
+              locale={pt}
+              popperPlacement="bottom"
+              dateFormat="dd/MM/yyyy"
+              selected={startDate}
+              onChange={date => setStartDate(date)}
+            />
           </label>
-          <label>
+          <label htmlFor="end_date">
             DATA DE TÉRMINO
-            <Input name="totalPrice" type="text" disabled />
+            <DateInput
+              name="end_date"
+              locale={pt}
+              selected={endDate}
+              popperPlacement="bottom"
+              dateFormat="dd/MM/yyyy"
+              disabled
+            />
           </label>
           <label>
             VALOR FINAL
-            <Input name="totalPrice" type="text" disabled />
+            <Input name="totalPrice" value={finalPrice} type="text" disabled />
           </label>
         </div>
       </Form>
@@ -119,10 +180,13 @@ export default function RegistrationForm({ initialData }) {
 
 RegistrationForm.propTypes = {
   initialData: PropTypes.shape({
-    title: PropTypes.string,
+    student_id: PropTypes.shape({
+      label: PropTypes.string,
+      value: PropTypes.number,
+    }),
     id: PropTypes.number,
-    price: PropTypes.number,
-    duration: PropTypes.number,
+    plan_id: PropTypes.number,
+    start_date: PropTypes.instanceOf(Date),
   }),
 };
 

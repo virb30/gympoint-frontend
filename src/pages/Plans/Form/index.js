@@ -79,7 +79,7 @@ export default function PlanForm({ initialData }) {
             <MdChevronLeft color="#fff" size={20} />
             VOLTAR
           </Link>
-          <button type="submit" form="plan" disabled={!!loading}>
+          <button type="submit" form="plan" disabled={loading}>
             <MdCheck color="#fff" size={20} /> SALVAR
           </button>
         </div>

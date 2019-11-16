@@ -37,8 +37,10 @@ export default function Students({ history }) {
       setStudents(response.data);
     }
 
-    loadStudents();
-  }, [search]);
+    if (!showForm) {
+      loadStudents();
+    }
+  }, [search, showForm]);
 
   const handleDelete = useCallback(
     async id => {

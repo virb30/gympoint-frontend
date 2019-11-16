@@ -31,9 +31,10 @@ const schema = Yup.object().shape({
 });
 
 export default function StudentForm({ initialData }) {
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit({ name, email, age, weight, height }) {
+    setLoading(true);
     try {
       if (initialData) {
         await api.put(`/students/${initialData.id}`, {
@@ -57,6 +58,7 @@ export default function StudentForm({ initialData }) {
     } catch (err) {
       toast.error('Não foi possível cadastrar o Aluno, tente novamente!');
     }
+    setLoading(false);
   }
 
   return (
@@ -68,7 +70,7 @@ export default function StudentForm({ initialData }) {
             <MdChevronLeft color="#fff" size={20} />
             VOLTAR
           </Link>
-          <button type="submit" form="student" disabled={!!loading}>
+          <button type="submit" form="student" disabled={loading}>
             <MdCheck color="#fff" size={20} /> SALVAR
           </button>
         </div>
