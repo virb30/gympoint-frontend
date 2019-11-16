@@ -1,21 +1,45 @@
-import React, { useEffect, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { MdAdd } from 'react-icons/md';
+import { toast } from 'react-toastify';
 
 import { formatPrice } from '~/util/format';
+import api from '~/services/api';
 
-import {
-  deletePlanRequest,
-  getPlansRequest,
-} from '~/store/modules/plan/actions';
-
-import Table from '~/components/Table';
+import List from './List';
+import Form from './Form';
 
 import { Container, Content } from './styles';
 
-export default function Plans() {
-  const dispatch = useDispatch();
+export default function Plans({ history }) {
+  const [plans, setPlans] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    async function loadPlans() {
+      const response = await api.get('/plans');
+
+      setPlans(response.data);
+    }
+
+    loadPlans();
+  }, []);
+
+  useEffect(() => {
+    const { state } = history.location;
+    if (!state) {
+      setShowForm(false);
+      setSelected(null);
+      return;
+    }
+    const { edit, selectedPlan } = state;
+    setShowForm(edit);
+
+    if (selectedPlan) {
+      setSelected(plans.find(s => s.id === Number(selectedPlan)));
+    }
+  }, [history.location, plans]);
 
   const handleDelete = useCallback(
     async id => {
@@ -24,14 +48,19 @@ export default function Plans() {
           'Deseja excluir este plano? Esta operação não poderá ser desfeita'
         )
       ) {
-        dispatch(deletePlanRequest(id));
+        try {
+          await api.delete(`/plans/${id}`);
+          setPlans(plans.filter(p => p.id !== id));
+        } catch (err) {
+          toast.error('Não foi possível excluir o plano. Tente novamente');
+        }
       }
     },
-    [dispatch]
+    [plans]
   );
 
-  const plans = useSelector(state =>
-    state.plan.plans.map(plan => ({
+  const renderPlans = useCallback(() => {
+    const data = plans.map(plan => ({
       ...plan,
       durationFormatted: `${plan.duration} ${
         plan.duration === 1 ? 'mês' : 'meses'
@@ -39,41 +68,59 @@ export default function Plans() {
       priceFormatted: formatPrice(plan.price),
       actions: (
         <div>
-          <Link to={`/plans/${plan.id}`}>editar</Link>
-          <button onClick={() => handleDelete(plan.id)} type="button">
+          <Link
+            to={{
+              pathname: '/plans',
+              state: { edit: true, selectedPlan: plan.id },
+            }}
+          >
+            editar
+          </Link>
+          <button
+            onClick={() => handleDelete(plan.id)}
+            type="button"
+            className="delete"
+          >
             apagar
           </button>
         </div>
       ),
-    }))
-  );
+    }));
 
-  useEffect(() => {
-    dispatch(getPlansRequest());
-  }, [dispatch]);
-
-  const headers = [
-    { key: 'title', title: 'TÍTULO', align: 'left' },
-    { key: 'durationFormatted', title: 'DURAÇÃO', align: 'center' },
-    { key: 'priceFormatted', title: 'VALOR p/ MÊS', align: 'center' },
-    { key: 'actions', title: '', align: 'right' },
-  ];
+    return data;
+  }, [handleDelete, plans]);
 
   return (
     <Container>
-      <Content>
-        <header>
-          <h1>Gerenciando Planos</h1>
-          <div>
-            <Link to="/plans/new" type="button">
-              <MdAdd color="#fff" size={20} />
-              CADASTRAR
-            </Link>
-          </div>
-        </header>
-
-        <Table data={plans} headers={headers} keyExtractor={item => item.id} />
+      <Content maxWidth={900}>
+        {!showForm ? (
+          <List plans={renderPlans()} />
+        ) : (
+          <Form initialData={selected} />
+        )}
       </Content>
     </Container>
   );
 }
+
+Plans.propTypes = {
+  history: PropTypes.shape({
+    location: PropTypes.shape({
+      state: PropTypes.shape({
+        edit: PropTypes.bool,
+        selectedPlan: PropTypes.number,
+      }),
+    }),
+  }),
+};
+
+Plans.defaultProps = {
+  history: {
+    location: {
+      state: {
+        edit: false,
+        selectedStudent: null,
+      },
+    },
+  },
+};

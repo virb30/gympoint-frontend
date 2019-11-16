@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { MdCheck, MdChevronLeft } from 'react-icons/md';
-import { Form, Input } from '@rocketseat/unform';
+import { Form, Input, Select } from '@rocketseat/unform';
 import * as Yup from 'yup';
 
 import api from '~/services/api';
@@ -11,7 +12,6 @@ import { formatPrice } from '~/util/format';
 import * as PlanActions from '~/store/modules/plan/actions';
 
 import Content from '~/components/DefaultForm';
-import { Container } from './styles';
 import SelectInput from '~/components/SelectInput';
 
 const INITIAL_PLAN = {
@@ -34,51 +34,32 @@ const schema = Yup.object().shape({
     .required('O preço é obrigatório'),
 });
 
-export default function PlanForm() {
-  const [plan, setPlan] = useState(INITIAL_PLAN);
-  const dispatch = useDispatch();
-  const { id } = useParams();
-  const { loading } = useSelector(state => state.registration);
-  const students = useSelector(state =>
-    state.student.students.map(s => {
-      return {
-        value: s.id,
-        label: s.name,
-      };
-    })
-  );
+export default function RegistrationForm({ initialData }) {
+  const [search, setSearch] = useState('');
+  const [registrationValues, setRegistrationValues] = useState(INITIAL_PLAN);
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const totalPrice = useMemo(() => {
-    if (plan.price && plan.duration) {
-      return formatPrice(plan.price * plan.duration);
-    }
+  async function loadOptions(inputValue) {
+    const { data } = await api.get('/students', { params: { q: inputValue } });
 
-    return 0.0;
-  }, [plan]);
-
-  useEffect(() => {
-    async function loadStudent() {
-      if (id !== 'new') {
-        const response = await api.get(`/plans/${id}`);
-        setPlan({ ...response.data });
-      }
-    }
-
-    loadStudent();
-  }, [id]);
-
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setPlan({ ...plan, [name]: value });
+    return data.map(s => ({
+      value: s.id,
+      label: s.name,
+    }));
   }
 
-  function handleSubmit(data) {
-    const { title, duration, price } = data;
-    if (id === 'new') {
-      dispatch(PlanActions.insertPlanRequest(title, duration, price));
-    } else {
-      dispatch(PlanActions.updatePlanRequest(id, title, duration, price));
+  useEffect(() => {
+    async function loadPlans() {
+      const { data } = await api.get('/plans');
+      setPlans(data);
     }
+
+    loadPlans();
+  }, []);
+
+  function handleSubmit(data) {
+    console.tron.log(data);
   }
 
   function handleSelectChange(e) {
@@ -86,75 +67,65 @@ export default function PlanForm() {
   }
 
   return (
-    <Container>
-      <Content>
-        <header>
-          <h1>
-            {id === 'new' ? 'Cadastro de matrícula' : 'Edição de matrícula'}
-          </h1>
-          <div>
-            <Link to="/registrations">
-              <MdChevronLeft color="#fff" size={20} />
-              VOLTAR
-            </Link>
-            <button type="submit" form="registration" disabled={!!loading}>
-              <MdCheck color="#fff" size={20} /> SALVAR
-            </button>
-          </div>
-        </header>
+    <Content>
+      <header>
+        <h1>
+          {!initialData ? 'Cadastro de matrícula' : 'Edição de matrícula'}
+        </h1>
+        <div>
+          <Link to="/registrations">
+            <MdChevronLeft color="#fff" size={20} />
+            VOLTAR
+          </Link>
+          <button type="submit" form="registration" disabled={!!loading}>
+            <MdCheck color="#fff" size={20} /> SALVAR
+          </button>
+        </div>
+      </header>
 
-        <Form schema={schema} id="registration" onSubmit={handleSubmit}>
-          <div>
-            <label>
-              ALUNO
-              <SelectInput
-                name="student"
-                options={students}
-                onChange={handleSelectChange}
-              />
-            </label>
-          </div>
-          <div>
-            <label>
-              PLANO
-              <Input
-                name="duration"
-                type="number"
-                value={plan.duration || ''}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              DATA DE INÍCIO
-              <Input
-                name="price"
-                type="number"
-                value={plan.price || ''}
-                onChange={handleChange}
-                step={0.01}
-              />
-            </label>
-            <label>
-              DATA DE TÉRMINO
-              <Input
-                name="totalPrice"
-                type="text"
-                value={totalPrice || ''}
-                disabled
-              />
-            </label>
-            <label>
-              VALOR FINAL
-              <Input
-                name="totalPrice"
-                type="text"
-                value={totalPrice || ''}
-                disabled
-              />
-            </label>
-          </div>
-        </Form>
-      </Content>
-    </Container>
+      <Form id="registration" initialData={initialData} onSubmit={handleSubmit}>
+        <div>
+          <label>
+            ALUNO
+            <SelectInput
+              name="student"
+              loadOptions={loadOptions}
+              defaultOptions
+            />
+          </label>
+        </div>
+        <div>
+          <label htmlFor="plan">
+            PLANO
+            <Select options={plans} name="plan" />
+          </label>
+          <label>
+            DATA DE INÍCIO
+            <Input name="price" type="number" step={0.01} />
+          </label>
+          <label>
+            DATA DE TÉRMINO
+            <Input name="totalPrice" type="text" disabled />
+          </label>
+          <label>
+            VALOR FINAL
+            <Input name="totalPrice" type="text" disabled />
+          </label>
+        </div>
+      </Form>
+    </Content>
   );
 }
+
+RegistrationForm.propTypes = {
+  initialData: PropTypes.shape({
+    title: PropTypes.string,
+    id: PropTypes.number,
+    price: PropTypes.number,
+    duration: PropTypes.number,
+  }),
+};
+
+RegistrationForm.defaultProps = {
+  initialData: null,
+};

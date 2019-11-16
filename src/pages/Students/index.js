@@ -1,19 +1,44 @@
-import React, { useEffect, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MdAdd, MdSearch } from 'react-icons/md';
+import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 
-import {
-  deleteStudentRequest,
-  getStudentsRequest,
-} from '~/store/modules/student/actions';
+import api from '~/services/api';
 
-import Table from '~/components/Table';
+import List from './List';
+import Form from './Form';
 
-import { Container, Content, InputGroup } from './styles';
+import { Container, Content } from './styles';
 
-export default function Students() {
-  const dispatch = useDispatch();
+export default function Students({ history }) {
+  const [students, setStudents] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const { state } = history.location;
+    if (!state) {
+      setShowForm(false);
+      setSelected(null);
+      return;
+    }
+    const { edit, selectedStudent } = state;
+    setShowForm(edit);
+
+    if (selectedStudent) {
+      setSelected(students.find(s => s.id === Number(selectedStudent)));
+    }
+  }, [history.location, students]);
+
+  useEffect(() => {
+    async function loadStudents() {
+      const response = await api.get('/students', { params: { q: search } });
+      setStudents(response.data);
+    }
+
+    loadStudents();
+  }, [search]);
 
   const handleDelete = useCallback(
     async id => {
@@ -22,69 +47,83 @@ export default function Students() {
           'Deseja excluir este aluno? Esta operação não poderá ser desfeita'
         )
       ) {
-        dispatch(deleteStudentRequest(id));
+        try {
+          await api.delete(`/students/${id}`);
+
+          setStudents(students.filter(s => s.id !== id));
+        } catch (err) {
+          toast.error('Não foi possível excluir o aluno. Tente novamente!');
+        }
       }
     },
-    [dispatch]
+    [students]
   );
 
-  const students = useSelector(state =>
-    state.student.students.map(student => ({
+  function handleSearch(value) {
+    setSearch(value);
+  }
+
+  const renderStudents = useCallback(() => {
+    const data = students.map(student => ({
       ...student,
       actions: (
         <div>
-          <Link to={`/students/${student.id}`}>editar</Link>
-          <button onClick={() => handleDelete(student.id)} type="button">
+          <Link
+            to={{
+              pathname: '/students',
+              state: { edit: true, selectedStudent: student.id },
+            }}
+          >
+            editar
+          </Link>
+          <button
+            onClick={() => handleDelete(student.id)}
+            type="button"
+            className="delete"
+          >
             apagar
           </button>
         </div>
       ),
-    }))
-  );
+    }));
 
-  function handleSearch(e) {
-    const search = e.target.value;
-    dispatch(getStudentsRequest(search));
-  }
-
-  useEffect(() => {
-    dispatch(getStudentsRequest());
-  }, [dispatch]);
-
-  const headers = [
-    { key: 'name', title: 'NOME', align: 'left' },
-    { key: 'email', title: 'E-MAIL', align: 'left' },
-    { key: 'age', title: 'IDADE', align: 'center' },
-    { key: 'actions', title: '', align: 'right' },
-  ];
+    return data;
+  }, [handleDelete, students]);
 
   return (
     <Container>
-      <Content>
-        <header>
-          <h1>Gerenciando Alunos</h1>
-          <div>
-            <Link to="/students/new" type="button">
-              <MdAdd color="#fff" size={20} />
-              CADASTRAR
-            </Link>
-            <InputGroup>
-              <MdSearch size={16} color="#999" />
-              <input
-                type="text"
-                placeholder="Buscar aluno"
-                onChange={handleSearch}
-              />
-            </InputGroup>
-          </div>
-        </header>
-
-        <Table
-          data={students}
-          headers={headers}
-          keyExtractor={item => item.id}
-        />
+      <Content maxWidth={showForm ? 900 : 1200}>
+        {!showForm ? (
+          <List
+            students={renderStudents()}
+            search={e => handleSearch(e.target.value)}
+          />
+        ) : (
+          <Form initialData={selected} />
+        )}
       </Content>
     </Container>
   );
 }
+
+Students.propTypes = {
+  history: PropTypes.shape({
+    location: PropTypes.shape({
+      state: PropTypes.shape({
+        edit: PropTypes.bool,
+        selectedStudent: PropTypes.number,
+      }),
+    }),
+  }),
+};
+
+Students.defaultProps = {
+  history: {
+    location: {
+      state: {
+        edit: false,
+        selectedStudent: null,
+      },
+    },
+  },
+};

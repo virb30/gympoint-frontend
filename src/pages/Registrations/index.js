@@ -1,37 +1,69 @@
-import React, { useEffect, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useCallback, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { MdAdd, MdCheckCircle } from 'react-icons/md';
+import { MdCheckCircle } from 'react-icons/md';
+import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
 import pt from 'date-fns/locale/pt';
 
-import {
-  deleteRegistrationRequest,
-  getRegistrationsRequest,
-} from '~/store/modules/registration/actions';
+import api from '~/services/api';
 
-import Table from '~/components/Table';
+import Form from './Form';
+import List from './List';
 
 import { Container, Content } from './styles';
 
-export default function Registrations() {
-  const dispatch = useDispatch();
+export default function Registrations({ history }) {
+  const [registrations, setRegistrations] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    async function loadRegistrations() {
+      const response = await api.get('/registrations');
+      setRegistrations(response.data);
+    }
+
+    loadRegistrations();
+  }, []);
+
+  useEffect(() => {
+    const { state } = history.location;
+    if (!state) {
+      setShowForm(false);
+      setSelected(null);
+      return;
+    }
+    const { edit, selectedRegistration } = state;
+    setShowForm(edit);
+
+    if (selectedRegistration) {
+      setSelected(
+        registrations.find(s => s.id === Number(selectedRegistration))
+      );
+    }
+  }, [history.location, registrations]);
 
   const handleDelete = useCallback(
-    id => {
+    async id => {
       if (
         global.confirm(
           'Deseja excluir esta Matrícula? Esta operação não poderá ser desfeita'
         )
       ) {
-        dispatch(deleteRegistrationRequest(id));
+        try {
+          await api.delete(`/registration/${id}`);
+          setRegistrations(registrations.filter(r => r.id !== Number(id)));
+        } catch (err) {
+          toast.error('Não foi possível excluir a Matrícula. Tente novamente');
+        }
       }
     },
-    [dispatch]
+    [registrations]
   );
 
-  const registrations = useSelector(state =>
-    state.registration.registrations.map(r => ({
+  const renderRegistrations = useCallback(() => {
+    const data = registrations.map(r => ({
       ...r,
       student: r.student.name,
       plan: r.plan.title,
@@ -44,47 +76,59 @@ export default function Registrations() {
       active: <MdCheckCircle color={r.active ? '#42cb49' : '#ddd'} size={20} />,
       actions: (
         <div>
-          <Link to={`/registrations/${r.id}`}>editar</Link>
-          <button onClick={() => handleDelete(r.id)} type="button">
+          <Link
+            to={{
+              pathname: '/registrations',
+              state: { edit: true, selectedRegistration: r.id },
+            }}
+          >
+            editar
+          </Link>
+          <button
+            onClick={() => handleDelete(r.id)}
+            type="button"
+            className="delete"
+          >
             apagar
           </button>
         </div>
       ),
-    }))
-  );
+    }));
 
-  useEffect(() => {
-    dispatch(getRegistrationsRequest());
-  }, [dispatch]);
-
-  const headers = [
-    { key: 'student', title: 'ALUNO', align: 'left' },
-    { key: 'plan', title: 'PLANO', align: 'center' },
-    { key: 'start_date', title: 'INÍCIO', align: 'center' },
-    { key: 'end_date', title: 'TÉRMINO', align: 'center' },
-    { key: 'active', title: 'ATIVA', align: 'center' },
-    { key: 'actions', title: '', align: 'right' },
-  ];
+    return data;
+  }, [handleDelete, registrations]);
 
   return (
     <Container>
-      <Content>
-        <header>
-          <h1>Gerenciando Matrículas</h1>
-          <div>
-            <Link to="/registrations/new" type="button">
-              <MdAdd color="#fff" size={20} />
-              CADASTRAR
-            </Link>
-          </div>
-        </header>
-
-        <Table
-          data={registrations}
-          headers={headers}
-          keyExtractor={item => item.id}
-        />
+      <Content maxWidth={showForm ? 900 : 1380}>
+        {!showForm ? (
+          <List registrations={renderRegistrations()} />
+        ) : (
+          <Form initialData={selected} />
+        )}
       </Content>
     </Container>
   );
 }
+
+Registrations.propTypes = {
+  history: PropTypes.shape({
+    location: PropTypes.shape({
+      state: PropTypes.shape({
+        edit: PropTypes.bool,
+        selectedRegistration: PropTypes.number,
+      }),
+    }),
+  }),
+};
+
+Registrations.defaultProps = {
+  history: {
+    location: {
+      state: {
+        edit: false,
+        selectedRegistration: null,
+      },
+    },
+  },
+};

@@ -1,27 +1,27 @@
 import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Select from 'react-select';
-
 import { useField } from '@rocketseat/unform';
 
-export default function SelectInput({ name, options, multiple, ...rest }) {
+import { AsyncSelect } from './styles';
+
+export default function SelectInput({ name, multiple, loadOptions, ...rest }) {
   const ref = useRef(null);
   const { fieldName, registerField, defaultValue, error } = useField(name);
 
   function parseSelectValue(selectRef) {
-    const selectValue = selectRef.state.value;
+    const selectValue = selectRef.select.state.value;
     if (!multiple) {
-      return selectValue ? selectValue.id : '';
+      return selectValue ? selectValue.value : '';
     }
 
-    return selectValue ? selectValue.map(option => option.id) : [];
+    return selectValue ? selectValue.map(option => option.value) : [];
   }
 
   useEffect(() => {
     registerField({
       name: fieldName,
       ref: ref.current,
-      path: 'state.value',
+      path: 'select.state.value',
       parseValue: parseSelectValue,
       clearValue: selectRef => {
         selectRef.select.clearValue();
@@ -29,25 +29,18 @@ export default function SelectInput({ name, options, multiple, ...rest }) {
     });
   }, [ref.current, fieldName]); //eslint-disable-line
 
-  function getDefaultValue() {
-    if (!defaultValue) return null;
-
-    if (!multiple) {
-      return options.find(option => option.value === defaultValue);
-    }
-
-    return options.filter(option => defaultValue.includes(option.value));
-  }
-
   return (
     <>
-      <Select
+      <AsyncSelect
         name={fieldName}
         aria-label={fieldName}
-        options={options}
+        loadOptions={loadOptions}
         isMulti={multiple}
-        defaultValue={getDefaultValue()}
         ref={ref}
+        cacheOptions
+        isClearable
+        defaultOptions
+        defaultValue={defaultValue}
         getOptionValue={option => option.value}
         getOptionLabel={option => option.label}
         {...rest}
@@ -60,13 +53,8 @@ export default function SelectInput({ name, options, multiple, ...rest }) {
 
 SelectInput.propTypes = {
   name: PropTypes.string.isRequired,
-  options: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number,
-      title: PropTypes.string,
-    })
-  ).isRequired,
   multiple: PropTypes.bool,
+  loadOptions: PropTypes.func.isRequired,
 };
 
 SelectInput.defaultProps = {

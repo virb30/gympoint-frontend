@@ -46,14 +46,21 @@ export const Td = styled.td`
 
     button {
       background: none;
-      color: ${colors.danger};
       font-size: 15px;
       border: 0;
       margin-left: 10px;
+
+      &.edit {
+        color: ${colors.info};
+      }
+
+      &.delete {
+        color: ${colors.danger};
+      }
     }
 
     a {
-      color: ${colors.info};
+      color: ${props => props.color || colors.info};
       text-decoration: none;
       font-size: 15px;
     }

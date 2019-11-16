@@ -5,13 +5,13 @@ import colors from '~/styles/colors';
 
 const Content = styled.div`
   width: 100%;
-  max-width: 900px;
   align-self: center;
 
   header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     width: 100%;
     margin-bottom: 30px;
 
@@ -83,7 +83,7 @@ const Content = styled.div`
     display: flex;
     flex-direction: column;
 
-    div {
+    > div {
       display: flex;
       flex-direction: row;
       padding: 5px;
@@ -97,16 +97,25 @@ const Content = styled.div`
         font-size: 14px;
         flex: 1;
 
-        input {
+        > input {
           border-radius: 4px;
           border: 1px solid #ddd;
           height: 45px;
-          margin-top: 8px;
+          margin-top: 5px;
           font-size: 16px;
           padding: 10px;
         }
 
-        span {
+        > select {
+          border-radius: 4px;
+          border: 1px solid #ddd;
+          height: 45px;
+          margin-top: 5px;
+          font-size: 16px;
+          padding: 10px;
+        }
+
+        > span {
           margin-top: 5px;
           color: ${lighten(0.15, colors.danger)};
         }
