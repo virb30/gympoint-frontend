@@ -70,3 +70,13 @@ export const Td = styled.td`
 export const Th = styled.th`
   text-align: ${props => props.align};
 `;
+
+export const NoResult = styled.tr`
+  td {
+    padding: 10px;
+    color: #444;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+  }
+`;

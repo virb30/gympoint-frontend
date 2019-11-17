@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Container, Td, Th } from './styles';
+import { Container, Td, Th, NoResult } from './styles';
 
-export default function Table({ data, headers, keyExtractor }) {
+export default function Table({ data, headers, keyExtractor, emptyText }) {
   return (
     <Container>
       <table>
@@ -17,6 +17,11 @@ export default function Table({ data, headers, keyExtractor }) {
           </tr>
         </thead>
         <tbody>
+          {data.length === 0 && (
+            <NoResult>
+              <td colSpan={headers.length}>{emptyText}</td>
+            </NoResult>
+          )}
           {data.map(item => (
             <tr key={keyExtractor(item)}>
               {headers.map(header => (
@@ -41,8 +46,10 @@ Table.propTypes = {
     })
   ).isRequired,
   keyExtractor: PropTypes.func,
+  emptyText: PropTypes.string,
 };
 
 Table.defaultProps = {
   keyExtractor: item => item.id,
+  emptyText: 'Nenhum resultado encontrado',
 };

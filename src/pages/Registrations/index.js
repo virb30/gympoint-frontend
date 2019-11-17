@@ -58,7 +58,7 @@ export default function Registrations({ history }) {
       };
     }
 
-    return {};
+    return null;
   }, [selected]);
 
   const handleDelete = useCallback(

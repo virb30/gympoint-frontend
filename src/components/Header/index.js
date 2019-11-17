@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 
 import { signOut } from '~/store/modules/auth/actions';
 
@@ -21,8 +21,10 @@ export default function Header() {
       <Content>
         <nav>
           <div>
-            <img src={brand} alt="GoBarber" />
-            <span>GYMPOINT</span>
+            <Link to="/">
+              <img src={brand} alt="GoBarber" />
+              <span>GYMPOINT</span>
+            </Link>
           </div>
 
           <NavLink to="/students">ALUNOS</NavLink>

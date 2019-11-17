@@ -30,8 +30,12 @@ const schema = Yup.object().shape({
 
 export default function RegistrationForm({ initialData }) {
   const [plans, setPlans] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [startDate, setStartDate] = useState(initialData.start_date || null);
+  const [selectedPlan, setSelectedPlan] = useState(
+    initialData ? initialData.plan_id : null
+  );
+  const [startDate, setStartDate] = useState(
+    initialData ? initialData.start_date : null
+  );
   const [loading, setLoading] = useState(false);
 
   async function loadOptions(inputValue) {
@@ -52,29 +56,33 @@ export default function RegistrationForm({ initialData }) {
     loadPlans();
   }, []);
 
-  useEffect(() => {
-    if (initialData.plan_id) {
-      setSelectedPlan(plans.find(p => p.id === Number(initialData.plan_id)));
-    }
-
-    setSelectedPlan(null);
-  }, [initialData.plan_id, plans]);
-
   const endDate = useMemo(() => {
     if (startDate && selectedPlan) {
-      return addMonths(startDate, selectedPlan.duration);
+      const plan = plans.find(p => p.id === Number(selectedPlan));
+
+      if (!plan) {
+        return '';
+      }
+
+      return addMonths(startDate, plan.duration);
     }
 
     return '';
-  }, [selectedPlan, startDate]);
+  }, [selectedPlan, startDate, plans]);
 
   const finalPrice = useMemo(() => {
     if (selectedPlan) {
-      return formatPrice(selectedPlan.duration * selectedPlan.price);
+      const plan = plans.find(p => p.id === Number(selectedPlan));
+
+      if (!plan) {
+        return '';
+      }
+
+      return formatPrice(plan.duration * plan.price);
     }
 
     return '';
-  }, [selectedPlan]);
+  }, [selectedPlan, plans]);
 
   async function handleSubmit({ student_id, plan_id, start_date }) {
     setLoading(true);
@@ -139,11 +147,7 @@ export default function RegistrationForm({ initialData }) {
             <Select
               options={plans}
               name="plan_id"
-              onChange={e =>
-                setSelectedPlan(
-                  plans.find(p => p.id === Number(e.target.value))
-                )
-              }
+              onChange={e => setSelectedPlan(e.target.value)}
             />
           </label>
           <label htmlFor="start_date">
