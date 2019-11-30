@@ -6,8 +6,14 @@ import { MdAdd } from 'react-icons/md';
 import Table from '~/components/Table';
 
 import { ListHeader } from './styles';
+import Pagination from '~/components/Pagination';
 
-export default function PlanList({ plans }) {
+export default function PlanList({
+  plans,
+  onChangePage,
+  currentPage,
+  numPages,
+}) {
   const headers = [
     { key: 'title', title: 'TÍTULO', align: 'left' },
     { key: 'durationFormatted', title: 'DURAÇÃO', align: 'center' },
@@ -33,6 +39,12 @@ export default function PlanList({ plans }) {
       </ListHeader>
 
       <Table data={plans} headers={headers} keyExtractor={item => item.id} />
+
+      <Pagination
+        onChangePage={onChangePage}
+        currentPage={currentPage}
+        numPages={numPages}
+      />
     </>
   );
 }
@@ -47,8 +59,14 @@ PlanList.propTypes = {
       actions: PropTypes.element,
     })
   ),
+  onChangePage: PropTypes.func,
+  currentPage: PropTypes.number,
+  numPages: PropTypes.number,
 };
 
 PlanList.defaultProps = {
   plans: [],
+  onChangePage: () => {},
+  currentPage: 1,
+  numPages: 1,
 };

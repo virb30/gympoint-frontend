@@ -4,10 +4,17 @@ import { Link } from 'react-router-dom';
 import { MdAdd, MdSearch } from 'react-icons/md';
 
 import Table from '~/components/Table';
+import Pagination from '~/components/Pagination';
 
 import { InputGroup, ListHeader } from './styles';
 
-export default function StudentList({ students, search }) {
+export default function StudentList({
+  students,
+  search,
+  onChangePage,
+  currentPage,
+  numPages,
+}) {
   const headers = [
     { key: 'name', title: 'NOME', align: 'left' },
     { key: 'email', title: 'E-MAIL', align: 'left' },
@@ -35,6 +42,12 @@ export default function StudentList({ students, search }) {
       </ListHeader>
 
       <Table data={students} headers={headers} keyExtractor={item => item.id} />
+
+      <Pagination
+        onChangePage={onChangePage}
+        currentPage={currentPage}
+        numPages={numPages}
+      />
     </>
   );
 }
@@ -50,8 +63,14 @@ StudentList.propTypes = {
     })
   ),
   search: PropTypes.func.isRequired,
+  onChangePage: PropTypes.func,
+  currentPage: PropTypes.number,
+  numPages: PropTypes.number,
 };
 
 StudentList.defaultProps = {
   students: [],
+  onChangePage: () => {},
+  currentPage: 1,
+  numPages: 1,
 };

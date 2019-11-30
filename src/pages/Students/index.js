@@ -15,6 +15,8 @@ export default function Students({ history }) {
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
+  const [numPages, setNumPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const { state } = history.location;
@@ -31,16 +33,27 @@ export default function Students({ history }) {
     }
   }, [history.location, students]);
 
-  useEffect(() => {
-    async function loadStudents() {
-      const response = await api.get('/students', { params: { q: search } });
-      setStudents(response.data);
-    }
+  const loadStudents = useCallback(
+    async (page = 1) => {
+      const response = await api.get('/students', {
+        params: { q: search, page },
+      });
+      setCurrentPage(page);
+      setNumPages(response.data.num_pages);
+      setStudents(response.data.students);
+    },
+    [search]
+  );
 
+  function handleChangePage(page) {
+    loadStudents(page);
+  }
+
+  useEffect(() => {
     if (!showForm) {
       loadStudents();
     }
-  }, [search, showForm]);
+  }, [loadStudents, search, showForm]);
 
   const handleDelete = useCallback(
     async id => {
@@ -99,6 +112,9 @@ export default function Students({ history }) {
           <List
             students={renderStudents()}
             search={e => handleSearch(e.target.value)}
+            onChangePage={handleChangePage}
+            numPages={numPages}
+            currentPage={currentPage}
           />
         ) : (
           <Form initialData={selected} />

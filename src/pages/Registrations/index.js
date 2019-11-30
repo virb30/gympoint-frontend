@@ -17,16 +17,25 @@ export default function Registrations({ history }) {
   const [registrations, setRegistrations] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [numPages, setNumPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const loadRegistrations = useCallback(async (page = 1) => {
+    const response = await api.get('/registrations', { params: { page } });
+    setCurrentPage(page);
+    setRegistrations(response.data.registrations);
+    setNumPages(response.data.num_pages);
+  }, []);
+
+  function handleChangePage(page) {
+    loadRegistrations(page);
+  }
 
   useEffect(() => {
-    async function loadRegistrations() {
-      const response = await api.get('/registrations');
-      setRegistrations(response.data);
-    }
     if (!showForm) {
       loadRegistrations();
     }
-  }, [showForm]);
+  }, [loadRegistrations, showForm]);
 
   useEffect(() => {
     const { state } = history.location;
@@ -119,7 +128,12 @@ export default function Registrations({ history }) {
     <Container>
       <Content maxWidth={showForm ? 900 : 1380}>
         {!showForm ? (
-          <List registrations={renderRegistrations()} />
+          <List
+            registrations={renderRegistrations()}
+            onChangePage={handleChangePage}
+            numPages={numPages}
+            currentPage={currentPage}
+          />
         ) : (
           <Form initialData={formattedSelected} />
         )}

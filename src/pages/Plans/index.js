@@ -15,18 +15,25 @@ export default function Plans({ history }) {
   const [plans, setPlans] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [numPages, setNumPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const loadPlans = useCallback(async (page = 1) => {
+    const response = await api.get('/plans', { params: { page } });
+    setCurrentPage(page);
+    setPlans(response.data.plans);
+    setNumPages(response.data.num_pages);
+  }, []);
+
+  function handleChangePage(page) {
+    loadPlans(page);
+  }
 
   useEffect(() => {
-    async function loadPlans() {
-      const response = await api.get('/plans');
-
-      setPlans(response.data);
-    }
-
     if (!showForm) {
       loadPlans();
     }
-  }, [showForm]);
+  }, [loadPlans, showForm]);
 
   useEffect(() => {
     const { state } = history.location;
@@ -96,7 +103,12 @@ export default function Plans({ history }) {
     <Container>
       <Content maxWidth={900}>
         {!showForm ? (
-          <List plans={renderPlans()} />
+          <List
+            plans={renderPlans()}
+            onChangePage={handleChangePage}
+            numPages={numPages}
+            currentPage={currentPage}
+          />
         ) : (
           <Form initialData={selected} />
         )}

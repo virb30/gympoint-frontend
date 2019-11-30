@@ -4,10 +4,16 @@ import { Link } from 'react-router-dom';
 import { MdAdd } from 'react-icons/md';
 
 import Table from '~/components/Table';
+import Pagination from '~/components/Pagination';
 
 import { ListHeader } from './styles';
 
-export default function RegistrationList({ registrations }) {
+export default function RegistrationList({
+  registrations,
+  onChangePage,
+  currentPage,
+  numPages,
+}) {
   const headers = [
     { key: 'student', title: 'ALUNO', align: 'left' },
     { key: 'plan', title: 'PLANO', align: 'center' },
@@ -40,6 +46,12 @@ export default function RegistrationList({ registrations }) {
         headers={headers}
         keyExtractor={item => item.id}
       />
+
+      <Pagination
+        onChangePage={onChangePage}
+        currentPage={currentPage}
+        numPages={numPages}
+      />
     </>
   );
 }
@@ -56,8 +68,14 @@ RegistrationList.propTypes = {
       actions: PropTypes.element,
     })
   ),
+  onChangePage: PropTypes.func,
+  currentPage: PropTypes.number,
+  numPages: PropTypes.number,
 };
 
 RegistrationList.defaultProps = {
   registrations: [],
+  onChangePage: () => {},
+  currentPage: 1,
+  numPages: 1,
 };

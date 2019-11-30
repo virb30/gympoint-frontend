@@ -39,9 +39,11 @@ export default function RegistrationForm({ initialData }) {
   const [loading, setLoading] = useState(false);
 
   async function loadOptions(inputValue) {
-    const { data } = await api.get('/students', { params: { q: inputValue } });
+    const { data } = await api.get('/students', {
+      params: { q: inputValue, per_page: 0 },
+    });
 
-    return data.map(s => ({
+    return data.students.map(s => ({
       value: s.id,
       label: s.name,
     }));
@@ -49,8 +51,8 @@ export default function RegistrationForm({ initialData }) {
 
   useEffect(() => {
     async function loadPlans() {
-      const { data } = await api.get('/plans');
-      setPlans(data);
+      const { data } = await api.get('/plans', { params: { per_page: 0 } });
+      setPlans(data.plans);
     }
 
     loadPlans();
