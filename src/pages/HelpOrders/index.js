@@ -8,8 +8,8 @@ import * as Yup from 'yup';
 import api from '~/services/api';
 
 import Modal from '~/components/Modal';
-
 import Table from '~/components/Table';
+import Pagination from '~/components/Pagination';
 
 import { Container, Content, FormContainer } from './styles';
 
@@ -21,20 +21,28 @@ export default function HelpOrders({ history }) {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
   const [helpOrders, setHelpOrders] = useState([]);
+  const [numPages, setNumPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const headers = [
     { key: 'student', title: 'ALUNO', align: 'left' },
     { key: 'actions', title: '', align: 'right' },
   ];
 
-  useEffect(() => {
-    async function loadHelpOrders() {
-      const { data } = await api.get('/help-orders');
-      setHelpOrders(data);
-    }
-
-    loadHelpOrders();
+  const loadHelpOrders = useCallback(async (page = 1) => {
+    const response = await api.get('/help-orders', { params: { page } });
+    setCurrentPage(page);
+    setHelpOrders(response.data.helpOrders);
+    setNumPages(response.data.num_pages);
   }, []);
+
+  function handleChangePage(page) {
+    loadHelpOrders(page);
+  }
+
+  useEffect(() => {
+    loadHelpOrders();
+  }, [loadHelpOrders]);
 
   useEffect(() => {
     const { state } = history.location;
@@ -95,6 +103,11 @@ export default function HelpOrders({ history }) {
           data={renderHelpOrders()}
           headers={headers}
           emptyText="Não há pedidos de auxílio para serem respondidos"
+        />
+        <Pagination
+          onChangePage={handleChangePage}
+          currentPage={currentPage}
+          numPages={numPages}
         />
       </Content>
       {selected && (
