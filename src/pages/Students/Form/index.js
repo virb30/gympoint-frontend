@@ -104,7 +104,7 @@ export default function StudentForm({ initialData }) {
             <Input name="weight" type="number" step={0.1} />
           </label>
           <label>
-            Altura (em cm)
+            ALTURA (em cm)
             <Input name="height" type="number" />
           </label>
         </div>
